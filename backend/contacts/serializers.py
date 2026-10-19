@@ -3,6 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email as django_validate_email
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from .models import Contact
 
@@ -14,7 +15,17 @@ class ContactSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=120)
     address = serializers.CharField()
     # Stored/validated as a plain string so the phone rules below stay explicit.
-    contact_number = serializers.CharField(max_length=20)
+    # UniqueValidator also blocks saving the same number twice, including when
+    # editing (a contact may keep its own number).
+    contact_number = serializers.CharField(
+        max_length=20,
+        validators=[
+            UniqueValidator(
+                queryset=Contact.objects.all(),
+                message="A contact with this contact number already exists.",
+            )
+        ],
+    )
     # Optional: empty string and a missing field both mean "no email".
     email = serializers.CharField(required=False, allow_blank=True)
 
