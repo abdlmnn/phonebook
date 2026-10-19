@@ -64,6 +64,12 @@ phonebook/
         └── components/
             ├── ContactFormModal.tsx
             └── ConfirmDeleteModal.tsx
+
+Outside `src/app`, the code is organized by responsibility:
+
+- `src/types/contact.ts`         — shared data types (Contact, form values, errors)
+- `src/lib/contactValidation.ts` — shared pure logic: validation rules + form mapping (no fetching)
+- `src/services/contacts.ts`     — ALL contact API calls (the frontend's CRUD layer)
     └── src/lib/phonebook.ts   # shared Contact type, mirrored validation rules, API helpers
 ```
 

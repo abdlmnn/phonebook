@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Contact, FieldName, FormErrors } from "@/types/contact";
 import {
-  Contact,
-  FieldName,
-  FormErrors,
-  createContact,
   toFormValues,
   toPayload,
-  updateContact,
   validateContactForm,
-} from "@/lib/phonebook";
+} from "@/lib/contactValidation";
+import { createContact, updateContact } from "@/services/contacts";
 
 export type ContactFormModalProps = {
   /** null = create mode, otherwise edit mode (pre-filled) */

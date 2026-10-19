@@ -1,17 +1,12 @@
 import type { NextRequest } from "next/server";
 
-/*
- * Explicit proxy to Django.
- *
- * Why not `rewrites()`? Next's rewrite machinery normalizes trailing slashes,
- * which breaks POST/DELETE to trailing-slash URLs (/api/contacts/ -> Django
- * sees /api/contacts -> redirect loop). This handler forwards the path exactly
- * as the browser sent it, so both sides keep the documented contract.
- */
+// Proxies /api requests to the Django backend.
+// A route handler is used (not rewrites) because Next rewrites change the
+// URL's trailing slash, which breaks POST and DELETE on Django.
 
 const DJANGO_BASE = "http://localhost:8000";
 
-// Hop-by-hop / misleading headers that must not be copied to the response.
+// These response headers should not be sent on to the browser.
 const DROPPED_RESPONSE_HEADERS = new Set([
   "content-encoding",
   "content-length",

@@ -3,11 +3,8 @@
 import { useEffect, useState } from "react";
 import ContactFormModal from "@/components/ContactFormModal";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
-import {
-  Contact,
-  deleteContact,
-  fetchContacts,
-} from "@/lib/phonebook";
+import type { Contact } from "@/types/contact";
+import { deleteContact, fetchContacts } from "@/services/contacts";
 
 type Notice = { kind: "success" | "error"; text: string };
 
