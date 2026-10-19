@@ -1,5 +1,10 @@
+from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from unittest import mock
+
+from .models import Contact
 
 LIST_URL = "/api/contacts/"
 
@@ -182,3 +187,71 @@ class DeleteTests(APITestCase):
     def test_delete_missing_contact_returns_404(self):
         response = self.client.delete(detail_url(999))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class DuplicateNumberTests(APITestCase):
+    """The same contact number cannot exist twice (unique rule)."""
+
+    def setUp(self):
+        self.client.post(LIST_URL, valid_payload(), format="json")
+
+    def test_create_rejects_duplicate_number(self):
+        response = self.client.post(
+            LIST_URL,
+            valid_payload(name="Someone Else With The Same Number"),
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["contact_number"],
+            ["A contact with this contact number already exists."],
+        )
+
+    def test_update_to_another_contacts_number_rejected_and_record_kept(self):
+        other = self.client.post(
+            LIST_URL,
+            valid_payload(
+                name="Grace Hopper",
+                contact_number="09182223333",
+                email="grace@example.com",
+            ),
+            format="json",
+        ).data
+        # Try to steal contact 1's number
+        response = self.client.patch(
+            detail_url(other["id"]),
+            {"contact_number": "09171234567"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # The record is unchanged
+        after = self.client.get(detail_url(other["id"])).data
+        self.assertEqual(after["contact_number"], "09182223333")
+
+    def test_update_keeping_own_number_allowed(self):
+        response = self.client.patch(
+            LIST_URL + "1/", {"name": "Ada K. Lovelace"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Ada K. Lovelace")
+
+    def test_number_is_free_again_after_delete(self):
+        self.assertEqual(self.client.delete(LIST_URL + "1/").status_code, status.HTTP_204_NO_CONTENT)
+        response = self.client.post(LIST_URL, valid_payload(name="Second Ada"), format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["contact_number"], "09171234567")
+
+    def test_database_collision_becomes_friendly_error_not_500(self):
+        """Two simultaneous requests can slip past the serializer check and
+        collide in the database. That must end as a normal field error (400),
+        never as a 500 error page."""
+        with mock.patch.object(
+            Contact, "save", side_effect=IntegrityError("UNIQUE constraint failed")
+        ):
+            response = self.client.post(LIST_URL, valid_payload(), format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["contact_number"],
+            ["A contact with this contact number already exists."],
+        )
+
