@@ -1,6 +1,6 @@
-# Views for the contacts API. Two separate views instead of one ViewSet:
-# - ContactListCreateView handles the collection URL /api/contacts/
-# - ContactDetailView handles the single item URL /api/contacts/{id}/
+# Views for the contacts API. Two views, one job each:
+# - ContactListCreateView: GET and POST on /api/contacts/
+# - ContactDetailView: GET, PATCH and DELETE on /api/contacts/{id}/
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
 
