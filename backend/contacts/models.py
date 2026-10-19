@@ -10,8 +10,7 @@ class Contact(models.Model):
 
     name = models.CharField(max_length=120)
     address = models.TextField()
-    # Unique: the same number cannot be saved twice (enforced by the database).
-    # Numbers are strings so '+' and leading zeros are preserved.
+    # Strings so numbers like '+63...' and '09...' keep their exact form.
     contact_number = models.CharField(
         max_length=20,
         unique=True,

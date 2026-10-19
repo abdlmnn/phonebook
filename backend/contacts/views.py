@@ -6,9 +6,8 @@ from rest_framework.filters import SearchFilter
 from .models import Contact
 from .serializers import ContactSerializer
 
-# Shown when two requests try to save the same number at almost the same
-# moment. The serializer's normal check runs first; this catches the rare
-# case where both slip past it and hit the database rule.
+# For when two simultaneous requests collide in the database; a 500 would
+# leak, a 400 shows the normal field error.
 DUPLICATE_MESSAGE = {
     "contact_number": ["A contact with this contact number already exists."]
 }
