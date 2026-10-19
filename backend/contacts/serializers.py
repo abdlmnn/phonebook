@@ -14,9 +14,6 @@ CONTACT_NUMBER_REGEX = re.compile(r"^\+?\d{7,15}$")
 class ContactSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=120)
     address = serializers.CharField()
-    # Stored/validated as a plain string so the phone rules below stay explicit.
-    # UniqueValidator also blocks saving the same number twice, including when
-    # editing (a contact may keep its own number).
     contact_number = serializers.CharField(
         max_length=20,
         validators=[

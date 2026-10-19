@@ -242,9 +242,7 @@ class DuplicateNumberTests(APITestCase):
         self.assertEqual(response.data["contact_number"], "09171234567")
 
     def test_database_collision_becomes_friendly_error_not_500(self):
-        """Two simultaneous requests can slip past the serializer check and
-        collide in the database. That must end as a normal field error (400),
-        never as a 500 error page."""
+        """A save that collides in the database must give a 400, not a 500."""
         with mock.patch.object(
             Contact, "save", side_effect=IntegrityError("UNIQUE constraint failed")
         ):
