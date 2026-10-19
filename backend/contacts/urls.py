@@ -1,4 +1,3 @@
-# URL routes for the contacts app. Included from config/urls.py.
 from django.urls import path
 
 from .views import ContactDetailView, ContactListCreateView
