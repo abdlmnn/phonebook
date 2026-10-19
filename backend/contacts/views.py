@@ -9,9 +9,8 @@ from rest_framework.filters import SearchFilter
 from .models import Contact
 from .serializers import ContactSerializer
 
-# Shown when two requests try to save the same number at almost the same
-# moment. The serializer's normal check runs first; this catches the rare
-# case where both slip past it and hit the database rule.
+# For when two simultaneous requests collide in the database; a 500 would
+# leak, a 400 shows the normal field error.
 DUPLICATE_MESSAGE = {
     "contact_number": ["A contact with this contact number already exists."]
 }
@@ -26,9 +25,7 @@ class ContactListCreateView(generics.ListCreateAPIView):
     filter_backends = [SearchFilter]
     search_fields = ["name", "contact_number"]
 
-    # The unique check in the serializer runs first, but two requests sent
-    # at almost the same moment can collide in the database. We turn that
-    # database error into a normal field error (400) instead of a 500.
+    # Stops a request that collided at the database level from being a 500.
     def create(self, request, *args, **kwargs):
         try:
             return super().create(request, *args, **kwargs)
@@ -42,7 +39,6 @@ class ContactDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 
-    # Same guard as above, for edits that try to grab someone else's number.
     def update(self, request, *args, **kwargs):
         try:
             return super().update(request, *args, **kwargs)
