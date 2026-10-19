@@ -7,7 +7,6 @@ from rest_framework.validators import UniqueValidator
 
 from .models import Contact
 
-# Optional leading '+', then 7-15 digits, nothing else.
 CONTACT_NUMBER_REGEX = re.compile(r"^\+?\d{7,15}$")
 
 
@@ -23,7 +22,6 @@ class ContactSerializer(serializers.ModelSerializer):
             )
         ],
     )
-    # Optional: empty string and a missing field both mean "no email".
     email = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
@@ -39,22 +37,18 @@ class ContactSerializer(serializers.ModelSerializer):
         ]
 
     def validate_name(self, value):
-        """Required: must not be empty or whitespace-only."""
         name = value.strip()
         if not name:
             raise serializers.ValidationError("Name cannot be empty.")
         return name
 
     def validate_address(self, value):
-        """Required: must not be empty or whitespace-only."""
         address = value.strip()
         if not address:
             raise serializers.ValidationError("Address cannot be empty.")
         return address
 
     def validate_contact_number(self, value):
-        """Required: optional leading '+', then 7-15 digits, nothing else.
-        Kept as a string so '+' and leading zeros survive."""
         number = value.strip()
         if not CONTACT_NUMBER_REGEX.match(number):
             raise serializers.ValidationError(
@@ -63,10 +57,6 @@ class ContactSerializer(serializers.ModelSerializer):
         return number
 
     def validate_email(self, value):
-        """The conditional rule:
-        - empty or missing -> allowed, save as None
-        - provided -> must be a valid email address
-        """
         email = (value or "").strip()
         if not email:
             return None

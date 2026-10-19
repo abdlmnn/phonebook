@@ -14,7 +14,6 @@ def detail_url(contact_id):
 
 
 def valid_payload(**overrides):
-    """A payload that passes validation; tests override single fields."""
     payload = {
         "name": "Ada Lovelace",
         "address": "12 Fenny Road",
@@ -29,7 +28,6 @@ class CreateContactTests(APITestCase):
     def test_create_succeeds(self):
         response = self.client.post(LIST_URL, valid_payload(), format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # Returned object is what was saved
         self.assertEqual(response.data["name"], "Ada Lovelace")
         self.assertEqual(response.data["contact_number"], "09171234567")
         self.assertEqual(response.data["email"], "ada@example.com")
@@ -73,13 +71,13 @@ class CreateContactTests(APITestCase):
 
     def test_create_rejects_invalid_contact_numbers(self):
         invalid_numbers = [
-            "091712",  # 6 digits: too short
-            "091712345678901234",  # 18 digits: too long
-            "0917123a45",  # contains a letter
-            "0917 123 4567",  # embedded space
-            "0917-123-4567",  # embedded dashes
-            "-09171234567",  # dash instead of '+' at start
-            "09171234567+",  # plus not at start
+            "091712",
+            "091712345678901234",
+            "0917123a45",
+            "0917 123 4567",
+            "0917-123-4567",
+            "-09171234567",
+            "09171234567+",
         ]
         for number in invalid_numbers:
             with self.subTest(number=number):
@@ -160,7 +158,6 @@ class UpdateTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Ada K. Lovelace")
-        # Untouched fields keep their values
         self.assertEqual(response.data["contact_number"], "09171234567")
         self.assertEqual(response.data["email"], "ada@example.com")
 
@@ -169,7 +166,6 @@ class UpdateTests(APITestCase):
         url = detail_url(created["id"])
         response = self.client.patch(url, {"email": "bad-email"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        # The record is unchanged
         after = self.client.get(url).data
         self.assertEqual(after["email"], "ada@example.com")
 
@@ -190,8 +186,6 @@ class DeleteTests(APITestCase):
 
 
 class DuplicateNumberTests(APITestCase):
-    """The same contact number cannot exist twice (unique rule)."""
-
     def setUp(self):
         self.client.post(LIST_URL, valid_payload(), format="json")
 
@@ -217,14 +211,12 @@ class DuplicateNumberTests(APITestCase):
             ),
             format="json",
         ).data
-        # Try to steal contact 1's number
         response = self.client.patch(
             detail_url(other["id"]),
             {"contact_number": "09171234567"},
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        # The record is unchanged
         after = self.client.get(detail_url(other["id"])).data
         self.assertEqual(after["contact_number"], "09182223333")
 
@@ -242,7 +234,6 @@ class DuplicateNumberTests(APITestCase):
         self.assertEqual(response.data["contact_number"], "09171234567")
 
     def test_database_collision_becomes_friendly_error_not_500(self):
-        """A save that collides in the database must give a 400, not a 500."""
         with mock.patch.object(
             Contact, "save", side_effect=IntegrityError("UNIQUE constraint failed")
         ):
@@ -252,4 +243,3 @@ class DuplicateNumberTests(APITestCase):
             response.data["contact_number"],
             ["A contact with this contact number already exists."],
         )
-
