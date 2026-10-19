@@ -32,7 +32,7 @@ These decisions are already confirmed by the user — do not re-ask:
 | Styling | Plain CSS (single stylesheet, no Tailwind, no component libraries) |
 | Add/Edit form | Presented as a modal dialog |
 | Delete confirmation | Presented as a modal dialog (not browser `confirm()`) |
-| CORS | Avoided entirely by proxying `/api/*` through Next.js rewrites |
+| CORS | Avoided entirely by proxying `/api/*` through a Next.js route handler (`src/app/api/[...path]/route.ts`) — NOT `rewrites()`, see note in §3 |
 | Data fetching | Plain `fetch` (no React Query, SWR, or axios) |
 | Auth | None — API is open |
 | Commits | Do not commit or push unless explicitly instructed |
@@ -59,14 +59,23 @@ phonebook/
         ├── app/
         │   ├── page.tsx        # Phonebook page (title, search, table, all client logic)
         │   ├── globals.css     # plain CSS
-        │   └── layout.tsx
+        │   ├── layout.tsx
+        │   └── api/[...path]/route.ts  # explicit proxy to Django (see note below)
         └── components/
             ├── ContactFormModal.tsx
             └── ConfirmDeleteModal.tsx
+    └── src/lib/phonebook.ts   # shared Contact type, mirrored validation rules, API helpers
 ```
 
 `page.tsx` holds table state + search; modals are isolated client components.
 Everything under `frontend` that changes is client-side (`"use client"`); no server components fetching.
+
+**IMPORTANT (learned during setup):** Next.js `rewrites()` cannot proxy `/api/*` — Next
+normalizes trailing slashes, which breaks POST/DELETE to `/api/contacts/` (redirect loop,
+Django `APPEND_SLASH` RuntimeError). The proxy is `src/app/api/[...path]/route.ts`, which
+forwards the path + query exactly as the browser sent it. `next.config.ts` additionally
+sets `skipTrailingSlashRedirect: true` and `turbopack.root: __dirname` (a stray
+`package-lock.json` in the user's home dir confuses Turbopack root detection).
 
 ## 4. Contact Data Model
 
@@ -151,7 +160,7 @@ Run with `python manage.py test` (temporary SQLite test database; no pollution o
 
 ### API wiring
 - All requests go to `/api/...` on the Next.js origin.
-- `next.config.ts` rewrites: `/api/:path*` → `http://localhost:8000/api/:path*`
+- All requests go to `/api/...` on the Next.js origin; `src/app/api/[...path]/route.ts` proxies them to Django (exact paths/trailing slashes preserved — see §3 note).
 - This means zero CORS configuration on Django (no `django-cors-headers`).
 - Non-2xx responses must be surfaced as friendly UI errors — never raw stack traces.
 
@@ -173,7 +182,7 @@ Run with `python manage.py test` (temporary SQLite test database; no pollution o
 3. `makemigrations` + `migrate`, then write and run `contacts` tests until green.
 4. Scaffold `frontend/` (create-next-app, TS, App Router, no Tailwind), strip demo code.
 5. Build Phonebook page: table, search, states; then modals (form + delete confirm).
-6. Wire frontend to API; verify proxy rewrites; manual E2E: create → search → edit → delete (+ 404 path via stale row).
+6. Wire frontend to API; verify the proxy (all method types, trailing slashes); manual E2E: create → search → edit → delete (+ 404 path via stale row).
 7. Write root `README.md` (run instructions: backend `python manage.py runserver`, frontend `npm run dev`).
 8. Review: remove unused scaffolding, confirm no duplicated logic, no extra deps, no leftover files.
 
