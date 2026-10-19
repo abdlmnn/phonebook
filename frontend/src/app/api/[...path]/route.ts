@@ -1,9 +1,5 @@
 import type { NextRequest } from "next/server";
 
-// Proxies /api requests to the Django backend.
-// A route handler is used (not rewrites) because Next rewrites change the
-// URL's trailing slash, which breaks POST and DELETE on Django.
-
 const DJANGO_BASE = "http://localhost:8000";
 
 // These response headers should not be sent on to the browser.

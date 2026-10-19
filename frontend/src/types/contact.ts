@@ -1,5 +1,3 @@
-// Data types for contacts, shared across the app.
-
 export interface Contact {
   id: number;
   name: string;

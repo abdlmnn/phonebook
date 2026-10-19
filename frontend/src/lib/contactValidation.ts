@@ -1,6 +1,3 @@
-// Client-side validation for the contact form.
-// The rules match the Django backend. The backend stays the final authority.
-
 import type {
   Contact,
   ContactFormValues,

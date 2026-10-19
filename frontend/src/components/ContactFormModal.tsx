@@ -17,13 +17,6 @@ export type ContactFormModalProps = {
   onSaved: (message: string) => void;
 };
 
-const FIELDS: Array<{ name: FieldName; label: string; required: boolean; type?: string }> = [
-  { name: "name", label: "Name", required: true },
-  { name: "address", label: "Address", required: true },
-  { name: "contact_number", label: "Contact Number", required: true },
-  { name: "email", label: "Email", required: false, type: "email" },
-];
-
 export default function ContactFormModal({ contact, onClose, onSaved }: ContactFormModalProps) {
   const isEdit = contact !== null;
   const [values, setValues] = useState(() => toFormValues(contact));
@@ -77,22 +70,53 @@ export default function ContactFormModal({ contact, onClose, onSaved }: ContactF
         {errors.form && <p className="form-level-error">{errors.form}</p>}
 
         <form onSubmit={handleSubmit} noValidate>
-          {FIELDS.map((field) => (
-            <div className="form-field" key={field.name}>
-              <label htmlFor={`field-${field.name}`}>
-                {field.label}
-                {field.required ? "" : " (optional)"}
-              </label>
-              <input
-                id={`field-${field.name}`}
-                type={field.type ?? "text"}
-                value={values[field.name]}
-                onChange={(event) => setField(field.name, event.target.value)}
-                aria-invalid={Boolean(errors[field.name])}
-              />
-              {errors[field.name] && <p className="field-error">{errors[field.name]}</p>}
-            </div>
-          ))}
+          <div className="form-field">
+            <label htmlFor="field-name">Name</label>
+            <input
+              id="field-name"
+              type="text"
+              value={values.name}
+              onChange={(event) => setField("name", event.target.value)}
+              aria-invalid={Boolean(errors.name)}
+            />
+            {errors.name && <p className="field-error">{errors.name}</p>}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="field-address">Address</label>
+            <input
+              id="field-address"
+              type="text"
+              value={values.address}
+              onChange={(event) => setField("address", event.target.value)}
+              aria-invalid={Boolean(errors.address)}
+            />
+            {errors.address && <p className="field-error">{errors.address}</p>}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="field-contact_number">Contact Number</label>
+            <input
+              id="field-contact_number"
+              type="text"
+              value={values.contact_number}
+              onChange={(event) => setField("contact_number", event.target.value)}
+              aria-invalid={Boolean(errors.contact_number)}
+            />
+            {errors.contact_number && <p className="field-error">{errors.contact_number}</p>}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="field-email">Email (optional)</label>
+            <input
+              id="field-email"
+              type="email"
+              value={values.email}
+              onChange={(event) => setField("email", event.target.value)}
+              aria-invalid={Boolean(errors.email)}
+            />
+            {errors.email && <p className="field-error">{errors.email}</p>}
+          </div>
 
           <div className="modal-actions">
             <button type="button" className="btn btn-secondary" onClick={onClose} disabled={submitting}>

@@ -1,7 +1,3 @@
-// All contact API calls live here.
-// Requests go to /api on this origin; the proxy in
-// src/app/api/[...path]/route.ts forwards them to Django.
-
 import type {
   Contact,
   ContactPayload,
